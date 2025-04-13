@@ -204,3 +204,48 @@ else:
                 st.error("⚠️ All fields are required.")  # Error if input fields are empty
 
     # -------------------- Retrieve Data Page ----------------
+    # -------------------- Retrieve Data Page --------------------
+    elif choice == "Retrieve Data":
+        st.subheader("🔍 Retrieve Your Encrypted Data")
+
+        user = st.session_state.username
+        user_data = stored_data.get(user, {})
+
+        if user_data:
+            st.write("🔐 Encrypted Entries:")
+            encrypted_options = list(user_data.keys())
+            selected_encrypted = st.selectbox("Select encrypted entry", encrypted_options)
+
+            passkey = st.text_input("Enter passkey to decrypt:", type="password")
+
+            if st.button("Decrypt"):
+                decrypted_text = decrypt_data(selected_encrypted, passkey)
+                if decrypted_text:
+                    st.success("✅ Decryption successful!")
+                    st.text_area("Decrypted Text", decrypted_text, height=150)
+                else:
+                    if st.session_state.lockout_time and datetime.now() < st.session_state.lockout_time:
+                        remaining = (st.session_state.lockout_time - datetime.now()).seconds
+                        st.error(f"⏳ Too many attempts! Try again in {remaining} seconds.")
+                    else:
+                        st.error("❌ Incorrect passkey.")
+        else:
+            st.info("📭 No data stored yet.")
+
+                 # -------------------- Download Data Page --------------------
+    elif choice == "Download Data":
+        st.subheader("📥 Download Stored Data")
+
+        user = st.session_state.username
+        user_data = stored_data.get(user, {})
+
+        if user_data:
+            data_text = json.dumps(user_data, indent=4)
+            st.download_button(
+                label="⬇️ Download Encrypted Data as JSON",
+                data=data_text,
+                file_name=f"{user}_encrypted_data.json",
+                mime="application/json"
+            )
+        else:
+            st.info("📭 No data available to download.")
